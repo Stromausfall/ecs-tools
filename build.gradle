@@ -1,6 +1,7 @@
 allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
+	apply plugin: "maven"
 
     version = '0.1'
     ext {
@@ -23,4 +24,19 @@ project(":ecs-gui") {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
     }
+}
+
+// create jars of each project
+task allJar(type: Jar, dependsOn: subprojects.tasks['classes'] ) {
+    baseName = appName
+    subprojects.each { subproject ->
+        from subproject.configurations.archives.allArtifacts.files.collect {
+            zipTree(it)
+        }
+    }
+}
+
+// merge the jars
+artifacts {
+    archives allJar
 }
