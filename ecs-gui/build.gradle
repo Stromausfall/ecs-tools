@@ -1,0 +1,14 @@
+apply plugin: "java"
+sourceCompatibility = 1.6
+
+sourceSets.main.java.srcDirs = [ "src/" ]
+sourceSets.main.resources.srcDirs = [ "src/" ]
+
+javadoc {
+    title = 'ECS-GUI'
+}
+
+eclipse.project {
+    name = appName + "-gui"
+}
+
