@@ -4,7 +4,7 @@ allprojects {
 	apply plugin: "maven"
 	group = 'com.github.Stromausfall'
 
-    version = '0.1.4'
+    version = '0.1.5'
     ext {
         appName = 'ecs-tools'
         gdxVersion = '1.6.4'
