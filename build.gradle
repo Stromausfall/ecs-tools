@@ -4,7 +4,7 @@ allprojects {
 	apply plugin: "maven"
 	group = 'com.github.Stromausfall'
 
-    version = '0.1.5'
+    version = '0.1.6'
     ext {
         appName = 'ecs-tools'
         gdxVersion = '1.6.4'
@@ -16,33 +16,4 @@ allprojects {
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url "https://oss.sonatype.org/content/repositories/releases/" }
     }
-}
-
-project(":ecs-gui") {
-    apply plugin: "java"
-
-    dependencies {
-        compile "com.badlogicgames.gdx:gdx:$gdxVersion"
-        compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
-    }
-}
-
-// create jars of each project
-task install(type: Jar, dependsOn: subprojects.assemble ) {
-    baseName = appName
-    subprojects.each { subproject ->
-        from subproject.configurations.archives.allArtifacts.files.collect {
-            zipTree(it)
-        }
-    }
-    subprojects.each { subproject ->
-        from subproject.sourceSets.main.java.srcDirs {
-            zipTree(it)
-        }
-    }
-	
-	// merge the jars
-	artifacts {
-		archives install
-	}
 }

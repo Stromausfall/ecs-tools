@@ -4,11 +4,23 @@ sourceCompatibility = 1.6
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = [ "src/" ]
 
-javadoc {
-    title = 'ECS-GUI'
-}
-
 eclipse.project {
     name = appName + "-gui"
 }
 
+dependencies {
+    dependencies {
+        compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+        compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
+    }
+}
+
+// build a jar with source files
+task sourcesJar(type: Jar) {
+    from sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar
+}
