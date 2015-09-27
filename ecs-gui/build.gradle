@@ -9,18 +9,30 @@ eclipse.project {
 }
 
 dependencies {
-    dependencies {
-        compile "com.badlogicgames.gdx:gdx:$gdxVersion"
-        compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
+    compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+    compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
+}
+
+sourceSets.all { set ->
+    def jarTask = task("${set.name}Jar", type: Jar) {
+        baseName = "$set.name"
+        from set.output
+    }
+
+    artifacts {
+        archives jarTask
     }
 }
 
-// build a jar with source files
-task sourcesJar(type: Jar) {
+jar {
+    from sourceSets.main.output
     from sourceSets.main.java.srcDirs
-    classifier = 'sources'
 }
 
-artifacts {
-    archives sourcesJar
+// this step is necessary when installing both jars in the local maven repository
+install {
+    repositories.mavenInstaller {
+		addFilter('.class') { artifact, file -> artifact.name.endsWith('x1') }
+		addFilter('.java') { artifact, file -> artifact.name.endsWith('x2') }
+    }
 }
