@@ -3,7 +3,7 @@ allprojects {
     apply plugin: "idea"
 	apply plugin: "maven"
 
-    version = '0.1.3'
+    version = '0.1.4'
     ext {
         appName = 'ecs-tools'
         gdxVersion = '1.6.4'
@@ -27,7 +27,7 @@ project(":ecs-gui") {
 }
 
 // create jars of each project
-task allJar(type: Jar, dependsOn: subprojects.assemble ) {
+task install(type: Jar, dependsOn: subprojects.assemble ) {
     baseName = appName
     subprojects.each { subproject ->
         from subproject.configurations.archives.allArtifacts.files.collect {
@@ -42,6 +42,6 @@ task allJar(type: Jar, dependsOn: subprojects.assemble ) {
 	
 	// merge the jars
 	artifacts {
-		archives allJar
+		archives install
 	}
 }
