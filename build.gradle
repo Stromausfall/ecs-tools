@@ -3,7 +3,7 @@ allprojects {
     apply plugin: "idea"
 	apply plugin: "maven"
 
-    version = '0.1'
+    version = '0.1a'
     ext {
         appName = 'ecs-tools'
         gdxVersion = '1.6.4'
@@ -36,7 +36,18 @@ task allJar(type: Jar, dependsOn: subprojects.tasks['classes'] ) {
     }
 }
 
+// create source jars of each project
+task allSourceJar(type: Jar, dependsOn: subprojects.tasks['classes'] ) {
+    baseName = appName + '-sources'
+    subprojects.each { subproject ->
+        from subproject.sourceSets.main.java.srcDirs {
+            zipTree(it)
+        }
+    }
+}
+
 // merge the jars
 artifacts {
     archives allJar
+    archives allSourceJar
 }
