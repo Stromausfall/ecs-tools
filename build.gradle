@@ -2,6 +2,7 @@ allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
 	apply plugin: "maven"
+	group = 'com.github.Stromausfall'
 
     version = '0.1.4'
     ext {
