@@ -38,6 +38,11 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
+jar {
+    from sourceSets.main.output
+    from sourceSets.main.java.srcDirs
+}
+
 artifacts {
     archives sourcesJar
     archives javadocJar
