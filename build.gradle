@@ -7,7 +7,6 @@ sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = [ "src/" ]
 
 group = 'com.github.Stromausfall'
-version = '0.1.7'
 
 ext {
 	appName = 'ecs-tools'
@@ -16,6 +15,7 @@ ext {
 }
 	
 sourceCompatibility = 1.6
+version = '0.1.8.5'
 
 repositories {
 	mavenCentral()
@@ -38,9 +38,9 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
-jar {
-    from sourceSets.main.java.srcDirs
-}
+//jar {
+//    from sourceSets.main.java.srcDirs
+//}
 
 artifacts {
     archives sourcesJar
