@@ -1,7 +1,9 @@
 package net.matthiasauer.ecstools.input.base.gestures;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.badlogic.ashley.core.Engine;
-import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.gdx.InputMultiplexer;
@@ -9,17 +11,19 @@ import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.Vector2;
 
+import net.matthiasauer.ecstools.utils.ContainerEntities;
+
 public class InputGestureEventGenerator extends EntitySystem implements GestureListener {
 	private final InputMultiplexer inputMultiplexer;
 	private final GestureDetector gestureDetector;
 	private PooledEngine engine;
-	private InputGestureEventComponent lastEvent;
-	private Entity inputGestureEventContainerEntity;
+	private final List<InputGestureEventComponent> lastEvents;
+	private ContainerEntities container;
 	private Float lastDistance = null;
 	private Float currentDistance = null;
 
 	public InputGestureEventGenerator(InputMultiplexer inputMultiplexer) {
-		this.lastEvent = null;
+		this.lastEvents = new LinkedList<InputGestureEventComponent>();
 		this.inputMultiplexer = inputMultiplexer;
 		this.gestureDetector =
 				new GestureDetector(20, 0.5f, 2, 0.15f, this);
@@ -30,11 +34,10 @@ public class InputGestureEventGenerator extends EntitySystem implements GestureL
 	@Override
 	public void update(float deltaTime) {
 		// remove any previous event
-		this.inputGestureEventContainerEntity.remove(InputGestureEventComponent.class);
+		this.container.clear();
 		
-		if (this.lastEvent != null) {
-			this.inputGestureEventContainerEntity.add(this.lastEvent);
-			this.lastEvent = null;
+		for (InputGestureEventComponent component : this.lastEvents) {
+			this.container.add(component);
 		}
 		
 		this.lastDistance = this.currentDistance;
@@ -44,8 +47,7 @@ public class InputGestureEventGenerator extends EntitySystem implements GestureL
 	@Override
 	public void addedToEngine(Engine engine) {
 		this.engine = (PooledEngine)engine;
-		this.inputGestureEventContainerEntity = this.engine.createEntity();		
-		this.engine.addEntity(this.inputGestureEventContainerEntity);
+		this.container = new ContainerEntities(this.engine);
 
 		super.addedToEngine(engine);
 	}
@@ -83,9 +85,9 @@ public class InputGestureEventGenerator extends EntitySystem implements GestureL
 
 	@Override
 	public boolean pan(float x, float y, float deltaX, float deltaY) {
-		this.lastEvent =
+		this.lastEvents.add(
 				this.engine.createComponent(InputGestureEventComponent.class).set(
-						InputGestureEventType.Pan, 0, deltaX, deltaY);
+						InputGestureEventType.Pan, 0, deltaX, deltaY));
 		return false;
 	}
 
@@ -104,9 +106,9 @@ public class InputGestureEventGenerator extends EntitySystem implements GestureL
 			float zoomDistance =
 					(this.currentDistance - this.lastDistance);
 
-			this.lastEvent =
+			this.lastEvents.add(
 					this.engine.createComponent(InputGestureEventComponent.class).set(
-							InputGestureEventType.Zoom, zoomDistance, 0, 0);
+							InputGestureEventType.Zoom, zoomDistance, 0, 0));
 		}
 		
 		return false;

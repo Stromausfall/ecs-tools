@@ -15,7 +15,7 @@ ext {
 }
 	
 sourceCompatibility = 1.6
-version = '0.1.8.5'
+version = '0.1.8.6'
 
 repositories {
 	mavenCentral()
@@ -37,10 +37,6 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
-
-//jar {
-//    from sourceSets.main.java.srcDirs
-//}
 
 artifacts {
     archives sourcesJar

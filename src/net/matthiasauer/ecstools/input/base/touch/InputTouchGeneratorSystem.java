@@ -1,5 +1,8 @@
 package net.matthiasauer.ecstools.input.base.touch;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
@@ -19,6 +22,7 @@ import com.badlogic.gdx.math.Vector3;
 import net.matthiasauer.ecstools.graphics.RenderComponent;
 import net.matthiasauer.ecstools.graphics.RenderedComponent;
 import net.matthiasauer.ecstools.graphics.texture.archive.RenderTextureArchiveSystem;
+import net.matthiasauer.ecstools.utils.ContainerEntities;
 
 /**
  * Catches touch up events and distributes them to the graphic which was
@@ -31,18 +35,18 @@ import net.matthiasauer.ecstools.graphics.texture.archive.RenderTextureArchiveSy
 public class InputTouchGeneratorSystem extends EntitySystem implements InputProcessor {
 	private final InputMultiplexer inputMultiplexer;
 	private final OrthographicCamera camera;
-	private Entity inputTouchContainerEntity;
+	private ContainerEntities containerEntities;
 	private PooledEngine engine;
 	private ImmutableArray<Entity> targetEntities;
 	private ComponentMapper<RenderComponent> renderComponentMapper;
 	private ComponentMapper<RenderedComponent> renderedComponentMapper;
 	private ComponentMapper<InputTouchTargetComponent> targetComponentMapper;
-	private InputTouchEventComponent lastEvent;
+	private final List<InputTouchEventComponent> lastEvents;
 	private RenderTextureArchiveSystem archive;
 	
 	public InputTouchGeneratorSystem(InputMultiplexer inputMultiplexer, OrthographicCamera camera) {
 		this.camera = camera;
-		this.lastEvent = null;
+		this.lastEvents = new LinkedList<InputTouchEventComponent>();
 		this.inputMultiplexer = inputMultiplexer;
 	}
 	
@@ -52,8 +56,8 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		this.inputMultiplexer.addProcessor(this);
 		
 		this.engine = (PooledEngine)engine;
-		this.inputTouchContainerEntity = this.engine.createEntity();
-		this.engine.addEntity(this.inputTouchContainerEntity);
+		this.containerEntities =
+				new ContainerEntities(this.engine);
 		this.renderComponentMapper =
 				ComponentMapper.getFor(RenderComponent.class);
 		this.renderedComponentMapper =
@@ -79,11 +83,11 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		super.removedFromEngine(engine);
 	}
 	
-	private Vector2 getPosition(boolean isProjected) {
+	private Vector2 getPosition(InputTouchEventComponent event, boolean isProjected) {
 		if (isProjected) {
-			return this.lastEvent.projectedPosition;
+			return event.projectedPosition;
 		} else {
-			return this.lastEvent.unprojectedPosition;
+			return event.unprojectedPosition;
 		}
 	}
 	
@@ -104,9 +108,12 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 	}
 	
 	private boolean touchesVisiblePartOfTarget(
-			Entity targetEntity, RenderComponent renderComponent, RenderedComponent renderedComponent) {
+			InputTouchEventComponent event,
+			Entity targetEntity,
+			RenderComponent renderComponent,
+			RenderedComponent renderedComponent) {
 		boolean isProjected = renderComponent.layer.projected;
-		Vector2 position = this.getPosition(isProjected);
+		Vector2 position = this.getPosition(event, isProjected);
 		Rectangle rectangle = this.getRectangle(isProjected, renderedComponent);
 		
 		// if in the bounding box
@@ -126,8 +133,9 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		return false;
 	}
 	
-	private void iterateOverAllEntitiesToFindTouched() {
+	private Entity iterateOverAllEntitiesToFindTouched(InputTouchEventComponent event) {
 		int orderOfCurrentTarget = -1;
+		Entity touchedEntity = null;
 
 		// go over all entities
 		for (Entity targetEntity : targetEntities) {
@@ -137,32 +145,40 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 					this.renderedComponentMapper.get(targetEntity);
 			
 			// search for the one that is touched and has the highest order of the layer
-			if (this.touchesVisiblePartOfTarget(targetEntity, renderComponent, renderedComponent)) {
+			if (this.touchesVisiblePartOfTarget(event, targetEntity, renderComponent, renderedComponent)) {
 
 				if (renderComponent.layer.order > orderOfCurrentTarget) {
 					orderOfCurrentTarget = renderComponent.layer.order;
-					this.lastEvent.target = targetEntity;
+					touchedEntity = targetEntity;
 				}
 			}
 		}
+		
+		return touchedEntity;
 	}
 	
 	@Override
 	public void update(float deltaTime) {
-		// remove any previous event
-		this.inputTouchContainerEntity.remove(InputTouchEventComponent.class);
+		// remove any previous events
+		this.containerEntities.clear();
+		Entity touchedEntity = null;
 		
-		// if there is an event that needs to be processsed
-		if (this.lastEvent != null) {
-			this.iterateOverAllEntitiesToFindTouched();
-			
+		// we only need to get the entity once - because the mouse is at the same position
+		// at the moment of time
+		if (!this.lastEvents.isEmpty()) {
+			touchedEntity =
+					this.iterateOverAllEntitiesToFindTouched(this.lastEvents.get(0));
+		}
+		
+		for (InputTouchEventComponent eventToProcess : this.lastEvents) {
 			Gdx.app.debug(
 					"InputTouchGeneratorSystem",
-					lastEvent.inputType + " - " + lastEvent.target);
+					eventToProcess.inputType + " - " + eventToProcess.target);
 
-			// save the event
-			this.inputTouchContainerEntity.add(lastEvent);
-			this.lastEvent = null;
+			eventToProcess.target = touchedEntity;
+			
+			// save the event in an entity
+			this.containerEntities.add(eventToProcess);
 		}
 	}
 	
@@ -210,15 +226,15 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 	private void saveEvent(int screenX, int screenY, InputTouchEventType inputType, int argument) {
 		Vector3 projected = new Vector3(screenX, screenY, 0);
 		Vector3 unprojected = this.camera.unproject(projected);
-		this.lastEvent =
+		InputTouchEventComponent newEvent =
 				this.engine.createComponent(InputTouchEventComponent.class);
-		this.lastEvent.argument = argument;
-		this.lastEvent.target = null;
-		this.lastEvent.inputType = inputType;
-		this.lastEvent.projectedPosition.x = unprojected.x;
-		this.lastEvent.projectedPosition.y = unprojected.y;
-		this.lastEvent.unprojectedPosition.x = screenX - (Gdx.graphics.getWidth() / 2);
-		this.lastEvent.unprojectedPosition.y = (Gdx.graphics.getHeight() / 2) - screenY;
+		newEvent.argument = argument;
+		newEvent.target = null;
+		newEvent.inputType = inputType;
+		newEvent.projectedPosition.x = unprojected.x;
+		newEvent.projectedPosition.y = unprojected.y;
+		newEvent.unprojectedPosition.x = screenX - (Gdx.graphics.getWidth() / 2);
+		newEvent.unprojectedPosition.y = (Gdx.graphics.getHeight() / 2) - screenY;
 	}
 
 	@Override
