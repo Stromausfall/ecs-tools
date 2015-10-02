@@ -180,6 +180,8 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 			// save the event in an entity
 			this.containerEntities.add(eventToProcess);
 		}
+		
+		this.lastEvents.clear();
 	}
 	
 	private boolean isClickedPixelVisible(Rectangle renderedRectangle, RenderComponent renderComponent, InputTouchTargetComponent targetComponent, Vector2 position) {
@@ -235,6 +237,8 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		newEvent.projectedPosition.y = unprojected.y;
 		newEvent.unprojectedPosition.x = screenX - (Gdx.graphics.getWidth() / 2);
 		newEvent.unprojectedPosition.y = (Gdx.graphics.getHeight() / 2) - screenY;
+		
+		this.lastEvents.add(newEvent);
 	}
 
 	@Override

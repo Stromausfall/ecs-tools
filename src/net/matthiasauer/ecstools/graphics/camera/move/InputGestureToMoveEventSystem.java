@@ -8,6 +8,8 @@ import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.ashley.systems.IteratingSystem;
 
 import net.matthiasauer.ecstools.input.base.gestures.InputGestureEventComponent;
+import net.matthiasauer.ecstools.input.base.gestures.InputGestureEventType;
+import net.matthiasauer.ecstools.utils.ContainerEntities;
 
 public class InputGestureToMoveEventSystem extends IteratingSystem {
 	@SuppressWarnings("unchecked")
@@ -15,7 +17,7 @@ public class InputGestureToMoveEventSystem extends IteratingSystem {
 			Family.all(InputGestureEventComponent.class).get();
 	private ComponentMapper<InputGestureEventComponent> inputGestureEventComponentComponentMapper;
 	private PooledEngine engine;
-	private Entity containerEntity;
+	private ContainerEntities container;
 
 	public InputGestureToMoveEventSystem() {
 		super(family);
@@ -27,8 +29,7 @@ public class InputGestureToMoveEventSystem extends IteratingSystem {
 		this.inputGestureEventComponentComponentMapper =
 				ComponentMapper.getFor(InputGestureEventComponent.class);
 		
-		this.containerEntity = this.engine.createEntity();
-		this.engine.addEntity(this.containerEntity);
+		this.container = new ContainerEntities(this.engine);
 		
 		super.addedToEngine(engine);
 	}
@@ -36,7 +37,7 @@ public class InputGestureToMoveEventSystem extends IteratingSystem {
 	@Override
 	public void update(float deltaTime) {
 		// remove the old event !
-		this.containerEntity.remove(MoveEventComponent.class);
+		this.container.clear();
 		
 		super.update(deltaTime);
 	}
@@ -46,9 +47,11 @@ public class InputGestureToMoveEventSystem extends IteratingSystem {
 		InputGestureEventComponent event =
 				this.inputGestureEventComponentComponentMapper.get(entity);
 
-		this.containerEntity.add(
-				this.engine.createComponent(MoveEventComponent.class).set(
-						-event.vector.x,
-						event.vector.y));
+		if (event.type == InputGestureEventType.Pan) {
+			this.container.add(
+					this.engine.createComponent(MoveEventComponent.class).set(
+							-event.vector.x,
+							event.vector.y));
+		}
 	}
 }

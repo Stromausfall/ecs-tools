@@ -39,6 +39,7 @@ public class InputGestureEventGenerator extends EntitySystem implements GestureL
 		for (InputGestureEventComponent component : this.lastEvents) {
 			this.container.add(component);
 		}
+		this.lastEvents.clear();
 		
 		this.lastDistance = this.currentDistance;
 		this.currentDistance = null;

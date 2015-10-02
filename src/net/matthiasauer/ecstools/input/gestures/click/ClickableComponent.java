@@ -1,4 +1,4 @@
-package net.matthiasauer.ecstools.input.click;
+package net.matthiasauer.ecstools.input.gestures.click;
 
 import com.badlogic.ashley.core.Component;
 
