@@ -10,6 +10,5 @@ public enum RenderPositionUnit {
 	/*
 	 * 0,0 is middle
 	 */
-	Pixels,
-	Tiles
+	Pixels
 }
