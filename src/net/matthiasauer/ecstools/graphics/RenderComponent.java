@@ -10,9 +10,10 @@ public class RenderComponent implements Component, Poolable {
 	public final Vector2 position = new Vector2();
 	public float rotation;
 	public RenderPositionUnit positionUnit;
-	public RenderLayer layer;
 	public Color tint;
 	public RenderType renderType;
+	public int renderOrder;
+	public boolean renderProjected;
 
 	public AtlasRegion spriteTexture;
 	
@@ -29,12 +30,13 @@ public class RenderComponent implements Component, Poolable {
 			float positionY,
 			float rotation,
 			RenderPositionUnit positionUnit,
-			RenderLayer layer,
+			int renderOrder,
+			boolean renderProjected,
 			String textString,
 			String textFont,
 //			int textSize,
 			Color tint) {
-		this.setGeneral(positionX, positionY, rotation, positionUnit, layer, tint);
+		this.setGeneral(positionX, positionY, rotation, positionUnit, renderOrder, renderProjected, tint);
 		
 		this.textFont = textFont;
 //		this.textSize = textSize;
@@ -50,9 +52,10 @@ public class RenderComponent implements Component, Poolable {
 			float rotation,
 			RenderPositionUnit positionUnit,
 			AtlasRegion texture,
-			RenderLayer layer,
+			int renderOrder,
+			boolean renderProjected,
 			Color tint) {
-		this.setGeneral(positionX, positionY, rotation, positionUnit, layer, tint);
+		this.setGeneral(positionX, positionY, rotation, positionUnit, renderOrder, renderProjected, tint);
 		
 		this.spriteTexture = texture;
 		this.renderType = RenderType.Sprite;
@@ -65,13 +68,15 @@ public class RenderComponent implements Component, Poolable {
 			float positionY,
 			float rotation,
 			RenderPositionUnit positionUnit,
-			RenderLayer layer,
+			int renderOrder,
+			boolean renderProjected,
 			Color tint) {
 		this.position.x = positionX;
 		this.position.y = positionY;
 		this.rotation = rotation;
 		this.positionUnit = positionUnit;
-		this.layer = layer;
+		this.renderOrder = renderOrder;
+		this.renderProjected = renderProjected;
 		this.tint = tint;
 
 		this.spriteTexture = null;
@@ -83,13 +88,6 @@ public class RenderComponent implements Component, Poolable {
 	
 	@Override
 	public void reset() {
-		this.setSprite(
-				0,
-				0,
-				0,
-				null,
-				null,
-				null,
-				null);
+		this.setGeneral(0, 0, 0, null, 0, false, null);
 	}
 }

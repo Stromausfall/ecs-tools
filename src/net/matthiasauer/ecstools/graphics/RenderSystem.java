@@ -1,9 +1,9 @@
 package net.matthiasauer.ecstools.graphics;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Engine;
@@ -22,29 +22,29 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 
 public class RenderSystem extends EntitySystem {
+	/**
+	 * 11 is the default size internally so start with that initial capacity
+	 */
+	private static final int sortedRenderComponentsInitialSize = 11;
 	public final OrthographicCamera camera;
 	private final SpriteBatch spriteBatch;
 	private ImmutableArray<Entity> entitiesToRender;
 	private ComponentMapper<RenderComponent> renderComponentMapper;
-	private final Map<RenderLayer, List<RenderComponent>> sortedComponents;
+	
+	private final Queue<RenderComponent> sortedRenderComponents;
 	private final Map<RenderComponent, Entity> reverseRenderComponentMapper;
 	private PooledEngine pooledEngine;
 
 	public RenderSystem(OrthographicCamera camera) {
 		this.camera = camera;
 		this.spriteBatch = new SpriteBatch();
-		this.sortedComponents = new HashMap<RenderLayer, List<RenderComponent>>();
 		this.reverseRenderComponentMapper = new HashMap<RenderComponent, Entity>();
 		
-		for (RenderLayer layer : RenderLayer.values()) {
-			this.sortedComponents.put(layer, new ArrayList<RenderComponent>());
-		}
-	}
-	
-	private void clearSortedComponents() {
-		for (RenderLayer layer : this.sortedComponents.keySet()) {
-			this.sortedComponents.get(layer).clear();
-		}
+		// create the PriorityQueue with the custom comparator and an initial size
+		this.sortedRenderComponents =
+				new PriorityQueue<RenderComponent>(
+						sortedRenderComponentsInitialSize,
+						new RenderComponentComparator());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -61,6 +61,26 @@ public class RenderSystem extends EntitySystem {
 		super.addedToEngine(engine);
 	}
 	
+	private void changeProjection(boolean renderProjected) {
+		// end
+		this.spriteBatch.end();
+		
+		if (renderProjected) {
+			this.camera.zoom = this.camera.zoom;
+			this.camera.update();
+			
+			this.spriteBatch.setProjectionMatrix(this.camera.combined);
+		} else {
+			this.camera.zoom = 1;
+			this.camera.update();
+			
+			this.spriteBatch.setProjectionMatrix(this.camera.projection);
+		}
+		
+		// start new batch
+		this.spriteBatch.begin();
+	}
+	
 	@Override
 	public void update(float deltaTime) {
 		Gdx.gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
@@ -69,44 +89,29 @@ public class RenderSystem extends EntitySystem {
 		this.orderRenderComponents();
 
 		this.spriteBatch.begin();
-		Boolean lastProjectedValue = null;
+		this.changeProjection(true);
+		boolean lastProjectedValue = true;
 		final float originalZoom = this.camera.zoom;
-		
-		// iterate over the enum in order
-		for (RenderLayer layer : RenderLayer.values()) {
-			if (lastProjectedValue != (Boolean)layer.projected) {
-				lastProjectedValue = layer.projected;
+
+		// iterate over the keys in order (that's what the treemap is for)
+		while (!this.sortedRenderComponents.isEmpty()) {
+			RenderComponent renderComponent = this.sortedRenderComponents.poll();
+			
+			if (lastProjectedValue != renderComponent.renderProjected) {
+				lastProjectedValue = renderComponent.renderProjected;
 				
-				// end
-				this.spriteBatch.end();
-				
-				if (layer.projected) {
-					this.camera.zoom = originalZoom;
-					this.camera.update();
-					
-					this.spriteBatch.setProjectionMatrix(this.camera.combined);
-				} else {
-					this.camera.zoom = 1;
-					this.camera.update();
-					
-					this.spriteBatch.setProjectionMatrix(this.camera.projection);
-				}
-				
-				// start new batch
-				this.spriteBatch.begin();
+				this.changeProjection(renderComponent.renderProjected);
 			}
 			
-			for (RenderComponent renderComponent : this.sortedComponents.get(layer)) {
-				switch (renderComponent.renderType) {
-				case Sprite:
-					this.drawSprite(renderComponent);
-					break;
-				case Text:
-					this.drawText(renderComponent);
-					break;
-				default:
-					throw new NullPointerException("Unknown RenderType ! : " + renderComponent.renderType);
-				}				
+			switch (renderComponent.renderType) {
+			case Sprite:
+				this.drawSprite(renderComponent);
+				break;
+			case Text:
+				this.drawText(renderComponent);
+				break;
+			default:
+				throw new NullPointerException("Unknown RenderType ! : " + renderComponent.renderType);
 			}
 		}
 		
@@ -129,7 +134,7 @@ public class RenderSystem extends EntitySystem {
 						renderComponent.position.y,
 						renderComponent.positionUnit);
 		
-		if (!renderComponent.layer.projected) {
+		if (!renderComponent.renderProjected) {
 			actualPositionX *= this.camera.zoom;
 			actualPositionY *= this.camera.zoom;
 		}
@@ -168,6 +173,14 @@ public class RenderSystem extends EntitySystem {
 	     spriteBatch.end();
 	     this.spriteBatch.setTransformMatrix(oldMatrix);
 	     spriteBatch.begin();
+	     
+	     this.reverseRenderComponentMapper.get(renderComponent).add(
+				this.pooledEngine.createComponent(RenderedComponent.class).set(
+						actualPositionX,
+						actualPositionY,
+						renderComponent.spriteTexture.getRegionWidth(),
+						renderComponent.spriteTexture.getRegionHeight(),
+						this.camera.zoom));
 	}
 	
 	private void drawSprite(RenderComponent renderComponent) {
@@ -186,7 +199,7 @@ public class RenderSystem extends EntitySystem {
 		float width = renderComponent.spriteTexture.getRegionWidth();
 		float height = renderComponent.spriteTexture.getRegionHeight();
 		
-		if (!renderComponent.layer.projected) {
+		if (!renderComponent.renderProjected) {
 			actualPositionX *= this.camera.zoom;
 			actualPositionY *= this.camera.zoom;
 			originX *= this.camera.zoom;
@@ -227,14 +240,14 @@ public class RenderSystem extends EntitySystem {
 	}
 	
 	private void orderRenderComponents() {
-		this.clearSortedComponents();
+		this.sortedRenderComponents.clear();
 		this.reverseRenderComponentMapper.clear();
 		
 		for (Entity renderEntity : this.entitiesToRender) {
 			RenderComponent data =
 					this.renderComponentMapper.get(renderEntity);
 			
-			this.sortedComponents.get(data.layer).add(data);
+			this.sortedRenderComponents.add(data);
 			this.reverseRenderComponentMapper.put(data, renderEntity);
 		}
 	}

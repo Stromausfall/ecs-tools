@@ -5,7 +5,7 @@ import com.badlogic.gdx.Gdx;
 /**
  * Looks cumbersome but primitives are better for the GarbageCollector than a Vector2 !
  */
-public class RenderPositionUnitTranslator {
+final class RenderPositionUnitTranslator {
 	public static float translateX(float x, float y, RenderPositionUnit positionUnit) {
 		float result = x;
 		

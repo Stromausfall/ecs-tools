@@ -112,7 +112,7 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 			Entity targetEntity,
 			RenderComponent renderComponent,
 			RenderedComponent renderedComponent) {
-		boolean isProjected = renderComponent.layer.projected;
+		boolean isProjected = renderComponent.renderProjected;
 		Vector2 position = this.getPosition(event, isProjected);
 		Rectangle rectangle = this.getRectangle(isProjected, renderedComponent);
 		
@@ -147,8 +147,8 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 			// search for the one that is touched and has the highest order of the layer
 			if (this.touchesVisiblePartOfTarget(event, targetEntity, renderComponent, renderedComponent)) {
 
-				if (renderComponent.layer.order > orderOfCurrentTarget) {
-					orderOfCurrentTarget = renderComponent.layer.order;
+				if (renderComponent.renderOrder > orderOfCurrentTarget) {
+					orderOfCurrentTarget = renderComponent.renderOrder;
 					touchedEntity = targetEntity;
 				}
 			}

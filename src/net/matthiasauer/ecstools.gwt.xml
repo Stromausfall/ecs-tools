@@ -5,7 +5,6 @@
 	
 	<extend-configuration-property name="gdx.reflect.include" value="net.matthiasauer.ecstools.graphics.RenderComponent" />
 	<extend-configuration-property name="gdx.reflect.include" value="net.matthiasauer.ecstools.graphics.RenderedComponent" />
-	<extend-configuration-property name="gdx.reflect.include" value="net.matthiasauer.ecstools.graphics.RenderLayer" />
 	<extend-configuration-property name="gdx.reflect.include" value="net.matthiasauer.ecstools.graphics.RenderPositionUnit" />
 	<extend-configuration-property name="gdx.reflect.include" value="net.matthiasauer.ecstools.graphics.RenderType" />
 	

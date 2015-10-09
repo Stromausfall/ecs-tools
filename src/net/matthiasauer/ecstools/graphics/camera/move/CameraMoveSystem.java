@@ -66,7 +66,7 @@ public class CameraMoveSystem extends IteratingSystem {
 			
 			// it only makes sense to collect the positions of projected
 			// textures !
-			if (renderComponent.layer.projected == true) {				
+			if (renderComponent.renderProjected == true) {				
 				minX = Math.min(minX, renderedComponent.renderedTarget.x);
 				minY = Math.min(minY, renderedComponent.renderedTarget.y);
 	
