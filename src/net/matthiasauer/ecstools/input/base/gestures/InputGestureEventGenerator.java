@@ -68,7 +68,9 @@ public class InputGestureEventGenerator extends EntitySystem implements GestureL
 
 	@Override
 	public boolean tap(float x, float y, int count, int button) {
-		// TODO Auto-generated method stub
+		this.lastEvents.add(
+				this.engine.createComponent(InputGestureEventComponent.class).set(
+						InputGestureEventType.Tap, count, x, y));
 		return false;
 	}
 
