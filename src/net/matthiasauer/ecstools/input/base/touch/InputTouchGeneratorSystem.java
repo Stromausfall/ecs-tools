@@ -107,6 +107,28 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		}
 	}
 	
+	/**
+	 * Instead of rotating the image we only rotate the mouse position !
+	 * @param position
+	 * @param rectangle
+	 * @param rotation
+	 */
+	private void rotatePosition(Vector2 position, Rectangle rectangle, float rotation) {		
+		// get center of rectangle
+		Vector2 center = new Vector2();
+		center = rectangle.getCenter(center);
+		
+		// the arrow points from the center to the position
+		Vector2 arrow = position;
+		arrow.sub(center);
+		
+		// now rotate the arrow
+		arrow.rotate(rotation);
+		
+		// finally attach it to the center again !
+		arrow.add(center);
+	}
+	
 	private boolean touchesVisiblePartOfTarget(
 			InputTouchEventComponent event,
 			Entity targetEntity,
@@ -115,6 +137,10 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		boolean isProjected = renderComponent.renderProjected;
 		Vector2 position = this.getPosition(event, isProjected);
 		Rectangle rectangle = this.getRectangle(isProjected, renderedComponent);
+		
+		if (renderComponent.rotation != 0) {
+			this.rotatePosition(position, rectangle, renderComponent.rotation);
+		}
 		
 		// if in the bounding box
 		if (rectangle.contains(position)) {
