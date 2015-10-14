@@ -173,14 +173,6 @@ public class RenderSystem extends EntitySystem {
 	     spriteBatch.end();
 	     this.spriteBatch.setTransformMatrix(oldMatrix);
 	     spriteBatch.begin();
-	     
-	     this.reverseRenderComponentMapper.get(renderComponent).add(
-				this.pooledEngine.createComponent(RenderedComponent.class).set(
-						actualPositionX,
-						actualPositionY,
-						renderComponent.spriteTexture.getRegionWidth(),
-						renderComponent.spriteTexture.getRegionHeight(),
-						this.camera.zoom));
 	}
 	
 	private void drawSprite(RenderComponent renderComponent) {

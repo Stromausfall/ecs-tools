@@ -19,7 +19,6 @@ public class RenderComponent implements Component, Poolable {
 	
 	public String textString;
 	public String textFont;
-//	public int textSize;
 	
 	public RenderComponent() {
 		this.reset();
@@ -34,12 +33,10 @@ public class RenderComponent implements Component, Poolable {
 			boolean renderProjected,
 			String textString,
 			String textFont,
-//			int textSize,
 			Color tint) {
 		this.setGeneral(positionX, positionY, rotation, positionUnit, renderOrder, renderProjected, tint);
 		
 		this.textFont = textFont;
-//		this.textSize = textSize;
 		this.textString = textString;
 		this.renderType = RenderType.Text;
 		
@@ -81,7 +78,6 @@ public class RenderComponent implements Component, Poolable {
 
 		this.spriteTexture = null;
 		this.textFont = null;
-//		this.textSize = -1;
 		this.textString = null;
 		this.renderType = null;
 	}
