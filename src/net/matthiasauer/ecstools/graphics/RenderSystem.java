@@ -34,6 +34,9 @@ public class RenderSystem extends EntitySystem {
 	private final Queue<RenderComponent> sortedRenderComponents;
 	private final Map<RenderComponent, Entity> reverseRenderComponentMapper;
 	private PooledEngine pooledEngine;
+	private final Map<String, BitmapFont> fonts =
+			new HashMap<String, BitmapFont>();
+	private final BitmapFont defaultFont = new BitmapFont(); 
 
 	public RenderSystem(OrthographicCamera camera) {
 		this.camera = camera;
@@ -121,7 +124,6 @@ public class RenderSystem extends EntitySystem {
 		this.camera.update();
 	}
 	
-	private final BitmapFont font = new BitmapFont(); 
 	private void drawText(RenderComponent renderComponent) {
 		float actualPositionX =
 				RenderPositionUnitTranslator.translateX(
@@ -137,6 +139,24 @@ public class RenderSystem extends EntitySystem {
 		if (!renderComponent.renderProjected) {
 			actualPositionX *= this.camera.zoom;
 			actualPositionY *= this.camera.zoom;
+		}
+		
+		BitmapFont font = this.defaultFont;
+		final String textFont = renderComponent.textFont;
+		
+		if (textFont != null) {
+			font = this.fonts.get(textFont);
+			
+			if (font == null) {
+				// if we don't have a cache
+				font =
+						new BitmapFont(
+								Gdx.files.internal(textFont + ".fnt"),
+								Gdx.files.internal(textFont + ".png"),
+								false);
+				
+				this.fonts.put(textFont, font);
+			}
 		}
 		
 		if (renderComponent.tint != null) {
