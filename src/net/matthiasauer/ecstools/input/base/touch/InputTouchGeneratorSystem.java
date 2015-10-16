@@ -15,12 +15,15 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import net.matthiasauer.ecstools.graphics.RenderComponent;
 import net.matthiasauer.ecstools.graphics.RenderedComponent;
+import net.matthiasauer.ecstools.graphics.SpriteRenderSpecialization;
+import net.matthiasauer.ecstools.graphics.TextRenderSpecialization;
 import net.matthiasauer.ecstools.graphics.texture.archive.RenderTextureArchiveSystem;
 import net.matthiasauer.ecstools.utils.ContainerEntities;
 
@@ -144,15 +147,28 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		
 		// if in the bounding box
 		if (rectangle.contains(position)) {
-			if (renderComponent.spriteTexture == null) {
-				throw new NullPointerException("targetComponent.texture was null !");
-			}
-
-			InputTouchTargetComponent targetComponent =
-					this.targetComponentMapper.get(targetEntity);
-
-			if (this.isClickedPixelVisible(rectangle, renderComponent, targetComponent, position)) {
+			if (renderComponent.getSpecialization() instanceof TextRenderSpecialization) {
+				// for the text render the mouse has to be just in the rectangle !
 				return true;
+			}
+			
+			if (renderComponent.getSpecialization() instanceof SpriteRenderSpecialization) {
+				// for a sprite we do pixel perfect detection !
+				SpriteRenderSpecialization specialization =
+						(SpriteRenderSpecialization) renderComponent.getSpecialization();
+				AtlasRegion spriteTexture =
+						specialization.spriteTexture;
+				
+				if (spriteTexture == null) {
+					throw new NullPointerException("texture was null !");
+				}
+
+				InputTouchTargetComponent targetComponent =
+						this.targetComponentMapper.get(targetEntity);
+	
+				if (this.isClickedPixelVisible(rectangle, spriteTexture, targetComponent, position)) {
+					return true;
+				}
 			}
 		}
 		
@@ -210,22 +226,22 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		this.lastEvents.clear();
 	}
 	
-	private boolean isClickedPixelVisible(Rectangle renderedRectangle, RenderComponent renderComponent, InputTouchTargetComponent targetComponent, Vector2 position) {
+	private boolean isClickedPixelVisible(Rectangle renderedRectangle, AtlasRegion spriteTexture, InputTouchTargetComponent targetComponent, Vector2 position) {
 		// http://gamedev.stackexchange.com/questions/43943/how-to-detect-a-touch-on-transparent-area-of-an-image-in-a-libgdx-stage
 		Pixmap pixmap =
-				this.archive.getPixmap(renderComponent.spriteTexture.getTexture());
+				this.archive.getPixmap(spriteTexture.getTexture());
 
 		// we want the position of the pixel in the texture !
 		// first add the offset of the region inside the texture, then add the position inside the texture !
 		// -> because we need the position inside the texture
 		int pixelX =
-				(int)(renderComponent.spriteTexture.getRegionX() + position.x - renderedRectangle.x);
+				(int)(spriteTexture.getRegionX() + position.x - renderedRectangle.x);
 		
 		// the same goes for the Y component, BUT the Y axis is inverted, therefore
 		// we need to invert the position INSIDE the texture !
 		// --> that's why we use regionHeigth - positionInsideTexture
 		int pixelY =
-				(int)(renderComponent.spriteTexture.getRegionY() + renderComponent.spriteTexture.getRegionHeight() - (position.y - renderedRectangle.y));
+				(int)(spriteTexture.getRegionY() + spriteTexture.getRegionHeight() - (position.y - renderedRectangle.y));
 
 		int pixel =
 				pixmap.getPixel(pixelX, pixelY);

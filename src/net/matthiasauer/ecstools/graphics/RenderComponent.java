@@ -11,36 +11,36 @@ public class RenderComponent implements Component, Poolable {
 	public float rotation;
 	public RenderPositionUnit positionUnit;
 	public Color tint;
-	public RenderType renderType;
 	public int renderOrder;
 	public boolean renderProjected;
-
-	public AtlasRegion spriteTexture;
+	/**
+	 * We already have the object for the specialization (it is already allocated
+	 * this is just to make it more friendly to the memory - for the poolable BaseRenderComponent
+	 */
+	private IRenderComponentSpecialization specialization;
+	private final SpriteRenderSpecialization spriteSpecialization =
+			new SpriteRenderSpecialization();
+	private final TextRenderSpecialization textRenderSpecialization =
+			new TextRenderSpecialization();
 	
-	public String textString;
-	public String textFont;
-	
-	public RenderComponent() {
-		this.reset();
-	}
-	
-	public RenderComponent setText(
+	private void setGeneral(
 			float positionX,
 			float positionY,
 			float rotation,
 			RenderPositionUnit positionUnit,
+			Color tint,
 			int renderOrder,
-			boolean renderProjected,
-			String textString,
-			String textFont,
-			Color tint) {
-		this.setGeneral(positionX, positionY, rotation, positionUnit, renderOrder, renderProjected, tint);
-		
-		this.textFont = textFont;
-		this.textString = textString;
-		this.renderType = RenderType.Text;
-		
-		return this;
+			boolean renderProjected) {
+		this.position.set(positionX, positionY);
+		this.rotation = rotation;
+		this.positionUnit = positionUnit;
+		this.tint = tint;
+		this.renderOrder = renderOrder;
+		this.renderProjected = renderProjected;
+	}
+	
+	public IRenderComponentSpecialization getSpecialization() {
+		return this.specialization;
 	}
 	
 	public RenderComponent setSprite(
@@ -48,42 +48,42 @@ public class RenderComponent implements Component, Poolable {
 			float positionY,
 			float rotation,
 			RenderPositionUnit positionUnit,
-			AtlasRegion texture,
+			Color tint,
 			int renderOrder,
 			boolean renderProjected,
-			Color tint) {
-		this.setGeneral(positionX, positionY, rotation, positionUnit, renderOrder, renderProjected, tint);
+			AtlasRegion spriteTexture) {
+		this.setGeneral(positionX, positionY, rotation, positionUnit, tint, renderOrder, renderProjected);
+		this.spriteSpecialization.spriteTexture = spriteTexture;
 		
-		this.spriteTexture = texture;
-		this.renderType = RenderType.Sprite;
+		this.specialization = this.spriteSpecialization;
 		
 		return this;
 	}
 	
-	private void setGeneral(
+	public RenderComponent setText(
 			float positionX,
 			float positionY,
 			float rotation,
 			RenderPositionUnit positionUnit,
+			Color tint,
 			int renderOrder,
 			boolean renderProjected,
-			Color tint) {
-		this.position.x = positionX;
-		this.position.y = positionY;
-		this.rotation = rotation;
-		this.positionUnit = positionUnit;
-		this.renderOrder = renderOrder;
-		this.renderProjected = renderProjected;
-		this.tint = tint;
-
-		this.spriteTexture = null;
-		this.textFont = null;
-		this.textString = null;
-		this.renderType = null;
+			String textString,
+			String textFont) {
+		this.setGeneral(positionX, positionY, rotation, positionUnit, tint, renderOrder, renderProjected);
+		this.textRenderSpecialization.textString = textString;
+		this.textRenderSpecialization.textFont = textFont;
+		
+		this.specialization = this.textRenderSpecialization;
+		
+		return this;
 	}
-	
+
 	@Override
 	public void reset() {
-		this.setGeneral(0, 0, 0, null, 0, false, null);
+		this.setGeneral(0, 0, 0, null, null, 0, false);
+		this.spriteSpecialization.spriteTexture = null;
+		this.textRenderSpecialization.textString = null;
+		this.textRenderSpecialization.textFont = null;
 	}
 }

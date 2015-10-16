@@ -18,7 +18,6 @@ public class CameraMoveSystem extends IteratingSystem {
 			Family.all(MoveEventComponent.class).get();
 	private ImmutableArray<Entity> renderedEntities;
 	private final ComponentMapper<RenderedComponent> renderedComponentMapper;
-	private final ComponentMapper<RenderComponent> renderComponentMapper;
 	private final ComponentMapper<MoveEventComponent> moveEventComponentMapper;
 	private final OrthographicCamera camera;
 	private final Vector2 translateCamera;
@@ -29,8 +28,6 @@ public class CameraMoveSystem extends IteratingSystem {
 		this.translateCamera = new Vector2();
 		this.moveEventComponentMapper =
 				ComponentMapper.getFor(MoveEventComponent.class);
-		this.renderComponentMapper =
-				ComponentMapper.getFor(RenderComponent.class);
 		this.renderedComponentMapper =
 				ComponentMapper.getFor(RenderedComponent.class);
 		
@@ -59,19 +56,17 @@ public class CameraMoveSystem extends IteratingSystem {
 		
 		// get values
 		for (Entity entity : this.renderedEntities) {
-			RenderComponent renderComponent =
-					this.renderComponentMapper.get(entity);
 			RenderedComponent renderedComponent =
 					this.renderedComponentMapper.get(entity);
 			
 			// it only makes sense to collect the positions of projected
 			// textures !
-			if (renderComponent.renderProjected == true) {				
+			if (renderedComponent.projected == true) {				
 				minX = Math.min(minX, renderedComponent.renderedTarget.x);
 				minY = Math.min(minY, renderedComponent.renderedTarget.y);
 	
-				maxX = Math.max(maxX, renderedComponent.renderedTarget.x + renderComponent.spriteTexture.getRegionWidth());
-				maxY = Math.max(maxY, renderedComponent.renderedTarget.y + renderComponent.spriteTexture.getRegionHeight());
+				maxX = Math.max(maxX, renderedComponent.renderedTarget.x + renderedComponent.renderedTarget.getWidth());
+				maxY = Math.max(maxY, renderedComponent.renderedTarget.y + renderedComponent.renderedTarget.getHeight());
 				
 				collectedEntities += 1;
 			}
