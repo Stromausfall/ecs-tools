@@ -116,7 +116,9 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 	 * @param rectangle
 	 * @param rotation
 	 */
-	private void rotatePosition(Vector2 position, Rectangle rectangle, float rotation) {		
+	private void rotatePosition(Vector2 position, Rectangle rectangle, float rotation) {
+		rotation = 360 - rotation;
+		
 		// get center of rectangle
 		Vector2 center = new Vector2();
 		center = rectangle.getCenter(center);

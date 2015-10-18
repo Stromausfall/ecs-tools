@@ -86,11 +86,13 @@ public class RenderSystem extends EntitySystem {
 	
 	@Override
 	public void update(float deltaTime) {
+		this.renderTextSubSystem.preIteration();
+		
 		Gdx.gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		this.orderRenderComponents();
-
+		
 		this.spriteBatch.begin();
 		this.changeProjection(true);
 		boolean lastProjectedValue = true;
