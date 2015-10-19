@@ -15,7 +15,7 @@ ext {
 }
 	
 sourceCompatibility = 1.6
-version = '0.1.9.7'
+version = '0.1.9.7b'
 
 repositories {
 	mavenCentral()
