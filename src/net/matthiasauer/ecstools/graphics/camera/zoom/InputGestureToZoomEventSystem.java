@@ -9,6 +9,7 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.Gdx;
 
 import net.matthiasauer.ecstools.input.base.gestures.InputGestureEventComponent;
+import net.matthiasauer.ecstools.input.base.gestures.InputGestureEventType;
 
 public class InputGestureToZoomEventSystem extends IteratingSystem {
 	@SuppressWarnings("unchecked")
@@ -47,11 +48,13 @@ public class InputGestureToZoomEventSystem extends IteratingSystem {
 		InputGestureEventComponent event =
 				this.inputGestureEventComponentComponentMapper.get(entity);
 		
-		// by dividing by the screen size - the speed becomes independent of the screen size !
-		float scaledZoomDistance =
-				- event.argument / Math.min(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-		this.containerEntity.add(
-				this.engine.createComponent(ZoomEventComponent.class).set(scaledZoomDistance));
+		if (event.type == InputGestureEventType.Zoom) { 		
+			// by dividing by the screen size - the speed becomes independent of the screen size !
+			float scaledZoomDistance =
+					- event.argument / Math.min(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+	
+			this.containerEntity.add(
+					this.engine.createComponent(ZoomEventComponent.class).set(scaledZoomDistance));
+		}
 	}
 }
