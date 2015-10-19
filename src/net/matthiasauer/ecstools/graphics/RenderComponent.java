@@ -17,11 +17,11 @@ public class RenderComponent implements Component, Poolable {
 	 * We already have the object for the specialization (it is already allocated
 	 * this is just to make it more friendly to the memory - for the poolable BaseRenderComponent
 	 */
-	private IRenderComponentSpecialization specialization;
 	private final SpriteRenderSpecialization spriteSpecialization =
 			new SpriteRenderSpecialization();
-	private final TextRenderSpecialization textRenderSpecialization =
+	private final TextRenderSpecialization textSpecialization =
 			new TextRenderSpecialization();
+	private RenderSpecialization specializationType;
 	
 	private void setGeneral(
 			float positionX,
@@ -39,8 +39,24 @@ public class RenderComponent implements Component, Poolable {
 		this.renderProjected = renderProjected;
 	}
 	
-	public IRenderComponentSpecialization getSpecialization() {
-		return this.specialization;
+	public TextRenderSpecialization getTextSpecialization() {
+		if (this.getSpecializationType() == RenderSpecialization.Text) {
+			return this.textSpecialization;
+		} else {
+			return null;
+		}
+	}
+	
+	public SpriteRenderSpecialization getSpriteSpecialization() {
+		if (this.getSpecializationType() == RenderSpecialization.Sprite) {
+			return this.spriteSpecialization;
+		} else {
+			return null;
+		}
+	}
+	
+	public RenderSpecialization getSpecializationType() {
+		return this.specializationType;
 	}
 	
 	public RenderComponent setSprite(
@@ -55,7 +71,7 @@ public class RenderComponent implements Component, Poolable {
 		this.setGeneral(positionX, positionY, rotation, positionUnit, tint, renderOrder, renderProjected);
 		this.spriteSpecialization.spriteTexture = spriteTexture;
 		
-		this.specialization = this.spriteSpecialization;
+		this.specializationType = RenderSpecialization.Sprite;
 		
 		return this;
 	}
@@ -71,10 +87,10 @@ public class RenderComponent implements Component, Poolable {
 			String textString,
 			String textFont) {
 		this.setGeneral(positionX, positionY, rotation, positionUnit, tint, renderOrder, renderProjected);
-		this.textRenderSpecialization.textString = textString;
-		this.textRenderSpecialization.textFont = textFont;
+		this.textSpecialization.textString = textString;
+		this.textSpecialization.textFont = textFont;
 		
-		this.specialization = this.textRenderSpecialization;
+		this.specializationType = RenderSpecialization.Text;
 		
 		return this;
 	}
@@ -83,7 +99,8 @@ public class RenderComponent implements Component, Poolable {
 	public void reset() {
 		this.setGeneral(0, 0, 0, null, null, 0, false);
 		this.spriteSpecialization.spriteTexture = null;
-		this.textRenderSpecialization.textString = null;
-		this.textRenderSpecialization.textFont = null;
+		this.textSpecialization.textString = null;
+		this.textSpecialization.textFont = null;
+		this.specializationType = null;
 	}
 }

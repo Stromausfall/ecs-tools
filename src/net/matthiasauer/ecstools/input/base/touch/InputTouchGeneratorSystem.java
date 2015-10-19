@@ -21,9 +21,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import net.matthiasauer.ecstools.graphics.RenderComponent;
+import net.matthiasauer.ecstools.graphics.RenderSpecialization;
 import net.matthiasauer.ecstools.graphics.RenderedComponent;
 import net.matthiasauer.ecstools.graphics.SpriteRenderSpecialization;
-import net.matthiasauer.ecstools.graphics.TextRenderSpecialization;
 import net.matthiasauer.ecstools.graphics.texture.archive.RenderTextureArchiveSystem;
 import net.matthiasauer.ecstools.utils.ContainerEntities;
 
@@ -115,16 +115,22 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 	 * @param position
 	 * @param rectangle
 	 * @param rotation
+	 * @param specializationType 
 	 */
-	private void rotatePosition(Vector2 position, Rectangle rectangle, float rotation) {
+	private Vector2 rotatePosition(Vector2 position, Rectangle rectangle, float rotation, RenderSpecialization specializationType) {
 		rotation = 360 - rotation;
 		
 		// get center of rectangle
 		Vector2 center = new Vector2();
 		center = rectangle.getCenter(center);
 		
+		if (specializationType == RenderSpecialization.Text) {
+			rectangle.getPosition(center);
+		}
+		
 		// the arrow points from the center to the position
-		Vector2 arrow = position;
+		// we create a new vecotr because we don't want to modify the position !
+		Vector2 arrow = new Vector2(position);
 		arrow.sub(center);
 		
 		// now rotate the arrow
@@ -132,6 +138,8 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		
 		// finally attach it to the center again !
 		arrow.add(center);
+		
+		return arrow;
 	}
 	
 	private boolean touchesVisiblePartOfTarget(
@@ -142,22 +150,26 @@ public class InputTouchGeneratorSystem extends EntitySystem implements InputProc
 		boolean isProjected = renderComponent.renderProjected;
 		Vector2 position = this.getPosition(event, isProjected);
 		Rectangle rectangle = this.getRectangle(isProjected, renderedComponent);
+		RenderSpecialization specializationType =
+				renderComponent.getSpecializationType();
 		
 		if (renderComponent.rotation != 0) {
-			this.rotatePosition(position, rectangle, renderComponent.rotation);
+			// get a new 'rotated vector'
+			position =
+					this.rotatePosition(position, rectangle, renderComponent.rotation, specializationType);
 		}
 		
 		// if in the bounding box
 		if (rectangle.contains(position)) {
-			if (renderComponent.getSpecialization() instanceof TextRenderSpecialization) {
+			if (specializationType == RenderSpecialization.Text) {
 				// for the text render the mouse has to be just in the rectangle !
 				return true;
 			}
 			
-			if (renderComponent.getSpecialization() instanceof SpriteRenderSpecialization) {
+			if (specializationType == RenderSpecialization.Sprite) {
 				// for a sprite we do pixel perfect detection !
 				SpriteRenderSpecialization specialization =
-						(SpriteRenderSpecialization) renderComponent.getSpecialization();
+						renderComponent.getSpriteSpecialization();
 				AtlasRegion spriteTexture =
 						specialization.spriteTexture;
 				

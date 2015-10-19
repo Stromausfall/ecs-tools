@@ -34,10 +34,10 @@ class RenderSpriteSubSystem {
 						renderComponent.position.x,
 						renderComponent.position.y,
 						renderComponent.positionUnit) - specialization.spriteTexture.getRegionHeight() / 2;
-		float originX = specialization.spriteTexture.getRegionWidth()/2;
-		float originY = specialization.spriteTexture.getRegionHeight()/2;
 		float width = specialization.spriteTexture.getRegionWidth();
 		float height = specialization.spriteTexture.getRegionHeight();
+		float originX = width/2;
+		float originY = height/2;
 		
 		if (!renderComponent.renderProjected) {
 			actualPositionX *= this.camera.zoom;

@@ -102,10 +102,10 @@ public class RenderSystem extends EntitySystem {
 		while (!this.sortedRenderComponents.isEmpty()) {
 			RenderComponent baseRenderComponent =
 					this.sortedRenderComponents.poll();
-			IRenderComponentSpecialization specialization =
-					baseRenderComponent.getSpecialization();
 			Entity renderEntity =
 					this.reverseRenderComponentMapper.get(baseRenderComponent);
+			RenderSpecialization specializationType =
+					baseRenderComponent.getSpecializationType();
 			
 			if (lastProjectedValue != baseRenderComponent.renderProjected) {
 				lastProjectedValue = baseRenderComponent.renderProjected;
@@ -113,19 +113,19 @@ public class RenderSystem extends EntitySystem {
 				this.changeProjection(baseRenderComponent.renderProjected);
 			}
 
-			if (specialization instanceof SpriteRenderSpecialization) {
+			if (specializationType == RenderSpecialization.Sprite) {
 				this.renderSpriteSubSystem.drawSprite(
 						renderEntity,
 						baseRenderComponent,
-						(SpriteRenderSpecialization) specialization);
+						baseRenderComponent.getSpriteSpecialization());
 				continue;
 			}
 
-			if (specialization instanceof TextRenderSpecialization) {
+			if (specializationType == RenderSpecialization.Text) {
 				this.renderTextSubSystem.drawText(
 						renderEntity,
 						baseRenderComponent,
-						(TextRenderSpecialization) specialization);
+						baseRenderComponent.getTextSpecialization());
 				continue;
 			}
 			
